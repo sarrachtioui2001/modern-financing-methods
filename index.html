@@ -540,13 +540,29 @@ var S = (function(){
     o.traverse(function(m){ if (m.isMesh || m.isSkinnedMesh){ m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; if (m.material) m.material.envMapIntensity = .5; } });
     w.add(o);
     var c = findClip(g.animations, clip);
-    if (c){ var mx = new T.AnimationMixer(o), act = mx.clipAction(c); act.play(); act.time = Math.random()*c.duration; mixers.push(mx); }
+    if (c){
+      var mx = new T.AnimationMixer(o), act = mx.clipAction(c); act.play();
+      if (clip === "sit"){
+        /* the models' "Sitting" clip sits down and stands up again: hold the most seated frame */
+        var hips = null, p = new T.Vector3(), best = 1e9, bestT = 0;
+        o.traverse(function(n){ if (!hips && n.isBone && /hip|pelvis/i.test(n.name)) hips = n; });
+        for (var s = 0; s <= 40; s++){
+          act.time = c.duration*s/40; mx.update(0); o.updateMatrixWorld(true);
+          var y = hips ? hips.getWorldPosition(p).y : 0;
+          if (y < best){ best = y; bestT = act.time; }
+        }
+        act.time = bestT; mx.update(0); act.paused = true;
+        w.userData.hipY = hips ? best : (h || .74)*.3;
+      } else { act.time = Math.random()*c.duration; }
+      mixers.push(mx);
+    }
     return place(parent, w, x, 0, z, ry);
   }
   /* simple clay furniture for the seated people */
-  function chair(parent, x, z, ry){
+  function chair(parent, x, z, ry, seatY){
     var c = new T.Group();
     add(c, box(.3, .05, .3), WHITE, 0, .27, 0); add(c, box(.3, .34, .05), WHITE, 0, .46, -.13);
+    if (seatY){ c.scale.set(1.25, seatY/.295, 1.25); }
     [[-.12, -.12], [.12, -.12], [-.12, .12], [.12, .12]].forEach(function(p){ add(c, cyl(.018, .018, .27, 8), INK, p[0], .135, p[1]); });
     return place(parent, c, x, 0, z, ry);
   }
@@ -633,10 +649,10 @@ var S = (function(){
       var slice = sector(.85, a0, a1, .32, accent(1)); pie.add(slice);
       var mid = (a0 + a1)/2, dir = [Math.cos(mid), -Math.sin(mid)];
       /* two investors seated side by side, facing the audience, a small table between them */
-      chair(g, .35, .55, 0).scale.setScalar(1.2); chair(g, 1.15, .55, 0).scale.setScalar(1.2);
-      table(g, .75, .45, .26, .26).scale.setScalar(1.2);
-      person(g, .35, .6, .15, "sit", .9, "man-in-suit");
-      person(g, 1.15, .6, -.15, "sit", .9, "woman-dress");
+      var inv1 = person(g, .35, .55, .75, "sit", .9, "man-in-suit");
+      var inv2 = person(g, 1.15, .55, -.75, "sit", .9, "woman-dress");
+      chair(g, .35 - .04, .5 - .03, .75, inv1.userData.hipY - .07); chair(g, 1.15 + .04, .5 - .03, -.75, inv2.userData.hipY - .07);
+      table(g, .75, .4, .26, .26).scale.setScalar(1.2);
       var tower = building(g, "building-small-d", 1, .75, -.85, 0);
       updates.push(function(t){
         var d = .1 + .3*(.5 + .5*Math.sin(t*1.1)); slice.position.set(dir[0]*d, 0, dir[1]*d);
@@ -667,7 +683,6 @@ var S = (function(){
       var top = sheet(); top.position.set(-.85, .135, .4);
       var flying = sheet(), back = flyCoin(g);
       building(g, "building-small-b", 1.45, .8, -.35, 0, accent(3));
-      person(g, -.2, 1.0, 0, "interact", .9, "woman-c");
       var cash = stack(g, 9, -.85, -.6);
       updates.push(function(t){
         var u = (t*.28) % 1, a = ease(Math.min(1, u*2)), b = ease(Math.max(0, u*2 - 1));
@@ -711,7 +726,7 @@ var S = (function(){
       var house = kit("building-small-d", .5, false, accent(5));
       if (house){ house.position.set(0, -.655, 0); pans[0].add(house); }
       for (var i = 0; i < 5; i++) flatCoin(pans[1], (i % 2)*.16 - .08, -.62 + Math.floor(i/2)*.058, i === 4 ? .14 : -.04);
-      person(g, 1.25, .75, -.5, "stand", .9, "man-in-suit");
+      person(g, 1.25, .75, -.5, "idle", .9, "man-in-suit");
       updates.push(function(t){ var a = Math.sin(t*.9)*.055; beam.rotation.z = a; pans.forEach(function(p){ p.rotation.z = -a; }); });
     })();
 
@@ -725,8 +740,8 @@ var S = (function(){
       var bars = [.2, .34, .26, .46].map(function(h, i){ var b = add(phone, box(.09, 1, .014), M(col), -.2 + i*.135, .5, .058); b.userData.h = h; b.castShadow = false; return b; });
       add(phone, cyl(.07, .07, .014, 20), GOLD, 0, .2, .058).rotation.x = Math.PI/2;
       var waves = [0, 1].map(function(){ var w = add(g, new T.TorusGeometry(.3, .022, 8, 40, Math.PI), M(col, {transparent:true}), -.35, 1.75, -.35); w.castShadow = false; return w; });
-      add(g, box(.85, .05, .34), WHITE, .85, .33, .55); add(g, box(.05, .33, .3), INK, .5, .165, .55); add(g, box(.05, .33, .3), INK, 1.2, .165, .55);
-      person(g, .85, .55, -.35, "sit", .9, "woman-b");
+      var sitter = person(g, .85, .55, -.35, "sit", .9, "woman-b"), sy = sitter.userData.hipY - .07;
+      add(g, box(.85, .05, .34), WHITE, .85, sy - .025, .5); add(g, box(.05, sy - .05, .3), INK, .5, (sy - .05)/2, .5); add(g, box(.05, sy - .05, .3), INK, 1.2, (sy - .05)/2, .5);
       var out = [0, 1, 2].map(function(){ return flyCoin(g); });
       updates.push(function(t){
         bars.forEach(function(b, i){ var k = .6 + .4*Math.sin(t*1.6 + i); b.scale.y = b.userData.h*k; b.position.y = .42 + b.scale.y/2; });
