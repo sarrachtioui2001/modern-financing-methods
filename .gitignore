@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# kept on your computer, not published
+speaker_script.html
+build_script.py

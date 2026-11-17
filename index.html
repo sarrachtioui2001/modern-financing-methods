@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modern Financing Methods</title>
+<!-- everything is local: the deck works without internet -->
+<link rel="stylesheet" href="lib/reveal.css">
+<style>
+@font-face{font-family:"Inter";font-weight:400;font-display:swap;src:url(lib/fonts/inter-400.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-display:swap;src:url(lib/fonts/inter-500.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-display:swap;src:url(lib/fonts/inter-600.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-weight:700;font-display:swap;src:url(lib/fonts/inter-700.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-weight:500;font-display:swap;src:url(lib/fonts/fraunces-500.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-weight:700;font-display:swap;src:url(lib/fonts/fraunces-700.woff2) format("woff2")}
+:root{
+  /* finance palette: blue = structure, amber = money, green / red = advantages / limits only */
+  --bg:#f7f6f2; --panel:rgba(255,255,255,.95); --ink:#1b2333; --muted:#5f6878; --rule:rgba(27,35,51,.13);
+  --primary:#1f4e9c; --primary-soft:#e6edf8; --accent:#6d3fa8; --pos:#2e7d5b; --neg:#b4432f;
+  --gold:var(--accent); --blue:var(--primary); --teal:var(--primary); --coral:var(--primary); --violet:var(--primary); --green:var(--primary); --cyan:var(--primary);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Inter",system-ui,"Segoe UI",Arial,sans-serif;
+}
+html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 70% 35%,#ffffff 0%,#f7f6f2 55%,#ebe8e0 100%);overflow:hidden}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity .9s ease}
+#labels{position:fixed;inset:0;z-index:1;pointer-events:none}
+.nl{position:absolute;left:0;top:0;transform:translate(-50%,-150%);font:600 15px var(--sans);color:var(--ink);white-space:nowrap;
+  padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.95);border:1px solid var(--rule);box-shadow:0 4px 14px rgba(26,33,52,.12);opacity:0;transition:opacity .5s}
+.nl i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+body.show-labels .nl{opacity:1}
+.reveal-viewport{background:transparent}
+.reveal{z-index:2;font-family:var(--sans);color:var(--ink);font-size:26px}
+.reveal .slides{text-align:left}
+.reveal .slides section{height:900px;box-sizing:border-box;padding:64px 84px}
+.reveal .controls{color:var(--gold)}
+.reveal .progress{color:var(--primary);height:4px}
+.reveal .slide-number{background:transparent;color:var(--muted);font:500 16px var(--sans);right:24px;bottom:18px}
+
+/* type */
+.kicker{font:700 20px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin:0 0 14px}
+h1.t{font:700 108px/0.98 var(--serif);margin:0 0 26px;letter-spacing:-.01em}
+h2.t{font:700 54px/1.05 var(--serif);margin:0 0 8px;letter-spacing:-.005em}
+.lede{font:400 30px/1.35 var(--sans);color:var(--muted);margin:0;max-width:760px}
+.def{font:400 25px/1.4 var(--sans);color:var(--muted);margin:10px 0 22px}
+.def b{color:var(--ink)}
+.rule{height:3px;width:90px;background:var(--accent);border:0;margin:22px 0}
+.byline{margin-top:48px;font:400 22px/1.5 var(--sans);color:var(--muted)}
+.byline b{color:var(--ink)}
+.tn{margin-top:18px;font:400 19px/1.4 var(--sans);color:var(--muted);border-left:3px solid var(--gold);padding:4px 0 4px 14px}
+.tn b{color:var(--ink)}
+.panel{width:880px;height:772px;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;background:var(--panel);border:1px solid var(--rule);border-radius:20px;padding:38px 46px;box-shadow:0 18px 50px rgba(26,33,52,.10);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.panel.wide{width:880px}
+/* slides without their own 3D scene: the card sits in the middle of the screen */
+.reveal .slides section.solo .panel{margin:0 auto}
+
+/* pros / cons */
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:20px}
+.pc h4{font:700 19px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+.pc .pro h4{color:var(--pos)} .pc .con h4{color:var(--neg)}
+.pc ul{margin:0;padding:0;list-style:none}
+.pc li{font:400 22px/1.35 var(--sans);padding-left:22px;position:relative;margin:4px 0}
+.pc li::before{content:"";position:absolute;left:0;top:11px;width:9px;height:9px;border-radius:2px}
+.pc .pro li::before{background:var(--pos)} .pc .con li::before{background:var(--neg)}
+
+/* chips and cards */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.chip{border:1px solid rgba(31,78,156,.18);border-radius:12px;padding:12px 14px;background:var(--primary-soft)}
+.chip b{display:block;font:700 21px var(--sans)}
+.chip span{font:400 17px/1.3 var(--sans);color:var(--muted)}
+.cards{display:grid;gap:16px;margin-top:18px}
+.cards.c3{grid-template-columns:repeat(3,1fr)} .cards.c2{grid-template-columns:repeat(2,1fr)}
+.card{border:1px solid var(--rule);border-radius:14px;padding:18px 20px;background:#fafbfd}
+.card .ic{font:700 15px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--c,var(--gold))}
+.card h3{font:700 26px/1.15 var(--serif);margin:6px 0 6px}
+.card p{font:400 20px/1.35 var(--sans);color:var(--muted);margin:0}
+
+/* two columns: classic vs limits */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.vs .card h3{font-size:30px}
+.vs ul{margin:10px 0 0;padding:0 0 0 22px}
+.vs li{font:400 23px/1.45 var(--sans);color:var(--ink)}
+.big-msg{margin-top:26px;font:700 34px/1.25 var(--serif)}
+.big-msg em{font-style:normal;color:var(--gold)}
+
+/* svg diagrams */
+svg.flow{width:100%;height:auto;display:block;overflow:visible}
+svg.flow .box{fill:rgba(26,33,52,.04);stroke:rgba(26,33,52,.32);stroke-width:1.5}
+svg.flow .bt{font:700 22px var(--sans);fill:var(--ink)}
+svg.flow .bs{font:400 16px var(--sans);fill:var(--muted)}
+svg.flow .al{font:600 17px var(--sans);fill:var(--ink)}
+svg.flow .arrow{fill:none;stroke-width:3;stroke-linecap:round}
+svg.flow .axis{stroke:rgba(26,33,52,.4);stroke-width:1.5}
+.reveal .fragment.custom{opacity:1;visibility:inherit}
+
+/* tables */
+table.tb{width:100%;border-collapse:collapse;font:400 21px/1.3 var(--sans);margin-top:16px}
+table.tb th{font:700 16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--rule)}
+table.tb td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.tb td:first-child{font-weight:700;white-space:nowrap}
+table.tb tr{transition:background .35s,opacity .35s}
+table.tb.filter tr.row{opacity:.28}
+table.tb.filter tr.row.hit{opacity:1;background:var(--primary-soft)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:9px;vertical-align:1px}
+
+/* finder */
+.finder{display:grid;grid-template-columns:1fr;gap:18px;margin-top:14px}
+.needs{display:flex;flex-wrap:wrap;gap:8px}
+.needs p{font:400 19px var(--sans);color:var(--muted);margin:0 0 2px;width:100%}
+.need{all:unset;cursor:pointer;font:600 18px var(--sans);color:var(--ink);padding:9px 14px;border-radius:12px;border:1px solid var(--rule);
+  background:rgba(26,33,52,.035);transition:background .25s,border-color .25s,transform .2s}
+.need:hover{border-color:var(--primary);transform:translateY(-2px)}
+.need.on{background:var(--primary);color:#ffffff;border-color:var(--primary)}
+.need:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+
+/* calc */
+.calc{display:grid;grid-template-columns:1fr auto;gap:4px 24px;margin-top:14px;font:400 21px/1.4 var(--sans);max-width:560px}
+.calc span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.calc .tot{font-weight:700;border-top:1px solid var(--rule);padding-top:6px;color:var(--gold)}
+
+/* agenda + takeaways */
+ol.ag{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:12px}
+ol.ag li{font:500 28px var(--sans);display:flex;align-items:center;gap:16px}
+ol.ag li .n{font:700 20px var(--sans);color:var(--muted);width:32px}
+ol.ag li i{width:13px;height:13px;border-radius:50%;flex:none}
+ol.take{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:18px;counter-reset:k}
+ol.take li{font:400 28px/1.35 var(--sans);padding-left:62px;position:relative;counter-increment:k}
+ol.take li::before{content:counter(k,decimal-leading-zero);position:absolute;left:0;top:0;font:700 30px var(--serif);color:var(--gold)}
+ol.take b{color:var(--gold);font-weight:700}
+.thanks{font:700 64px var(--serif);margin-top:34px}
+
+/* real photos: rounded panel to the right of the card, slow zoom */
+.photo{position:absolute;top:64px;right:84px;width:500px;height:772px;margin:0;border-radius:20px;overflow:hidden;
+  box-shadow:0 18px 50px rgba(27,35,51,.16);background:#dfe3ea}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:50% 50%}
+.photo figcaption{position:absolute;left:0;right:0;bottom:0;padding:60px 26px 22px;font:600 20px/1.3 var(--sans);color:#fff;
+  background:linear-gradient(180deg,rgba(20,26,40,0) 0%,rgba(20,26,40,.78) 100%)}
+.photo figcaption span{display:block;font:700 14px var(--sans);letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.photo.hero{width:640px}
+/* the wheel: seven photo cards on a turning ring, right of the text card */
+#wheel{position:fixed;inset:0;z-index:1;pointer-events:none;transition:opacity .8s ease}
+#wheel.off{opacity:0}
+html.snap #wheel{transition:none}   /* ?snap (screenshots only): no fade, so captures show the final state */
+#wheel .stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0}
+/* the wheel sits exactly where a photo panel would: right of the card, same height (772 px), same top and bottom */
+#wheel .persp{position:absolute;left:1016px;top:64px;width:500px;height:772px;perspective:2200px;transform-origin:50% 50%}
+#wheel .ring{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+#wheel .wc{position:absolute;left:-250px;top:-386px;width:500px;height:772px;border-radius:20px;overflow:hidden;
+  background:#dfe3ea;box-shadow:0 18px 40px rgba(27,35,51,.22)}
+#wheel .wc img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:50% 50%}
+#wheel .wc .cap{position:absolute;left:0;right:0;bottom:0;padding:70px 26px 24px;color:#fff;font:600 22px/1.3 var(--sans);
+  background:linear-gradient(180deg,rgba(20,26,40,0) 0%,rgba(20,26,40,.82) 100%)}
+#wheel .wc .cap b{display:block;font:700 15px var(--sans);letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:3px}
+#wheel .hub{position:absolute;left:-130px;top:-130px;width:260px;height:260px;font-size:26px!important;border-radius:50%;
+  background:var(--primary);color:#fff;display:grid;place-items:center;text-align:center;font:700 15px/1.2 var(--sans);
+  letter-spacing:.08em;text-transform:uppercase;box-shadow:0 14px 34px rgba(31,78,156,.35);transition:opacity .6s,transform .6s}
+#wheel.focus .hub{opacity:0}
+@media (prefers-reduced-motion: reduce){ #gl{transition:none} }
+</style>
+</head>
+<body>
+
+<div id="wheel" class="off" aria-hidden="true"><div class="stage"><div class="persp"><div class="ring" id="ring"><div class="hub">The<br>company</div></div></div></div></div>
+
+<div class="reveal"><div class="slides">
+
+<!-- 1 TITLE -->
+<section data-cam="title">
+  <div style="margin-top:120px;max-width:860px">
+    <p class="kicker" data-a>Finance for the Engineer · Exposé</p>
+    <h1 class="t" data-a>Modern<br>Financing<br>Methods</h1>
+    <p class="lede" data-a>Financing a company beyond the bank loan</p>
+    <hr class="rule" data-a>
+    <p class="byline" data-a>Presented by <b>Sarra Chtioui</b><br>EPI Sousse · 2026–2027</p>
+  </div>
+  <aside class="notes">Good morning. Today I present the modern methods a company can use to finance itself when a bank loan is not enough, or not possible. On the right, the seven methods turn like a wheel around the company; we will stop on each one.</aside>
+</section>
+
+<!-- 2 AGENDA -->
+<section data-cam="map">
+  <div class="panel">
+    <p class="kicker" data-a>Agenda</p>
+    <h2 class="t" data-a>Seven methods around one company</h2>
+    <ol class="ag" data-a>
+      <li><span class="n">00</span><i style="background:var(--muted)"></i>Why modern financing?</li>
+      <li><span class="n">01</span><i style="background:var(--primary)"></i>Crowdfunding</li>
+      <li><span class="n">02</span><i style="background:var(--blue)"></i>Private equity</li>
+      <li><span class="n">03</span><i style="background:var(--teal)"></i>Leasing</li>
+      <li><span class="n">04</span><i style="background:var(--coral)"></i>Factoring</li>
+      <li><span class="n">05</span><i style="background:var(--violet)"></i>Microfinance</li>
+      <li><span class="n">06</span><i style="background:var(--green)"></i>Islamic finance</li>
+      <li><span class="n">07</span><i style="background:var(--cyan)"></i>Digital finance</li>
+    </ol>
+  </div>
+  <aside class="notes">First, why companies need these methods at all. Then the seven methods: crowdfunding, private equity, leasing, factoring, microfinance, Islamic finance and digital finance. We finish with a comparison, and an interactive slide to choose the right method.</aside>
+</section>
+
+<!-- 3 WHY -->
+<section data-cam="gap" class="solo">
+  <div class="panel">
+    <p class="kicker" data-a>00 · Why modern financing?</p>
+    <h2 class="t" data-a>Classic financing has limits</h2>
+    <div class="vs">
+      <div class="card" data-a style="--c:var(--blue)"><div class="ic">Classic sources</div><h3>What companies used</h3>
+        <ul><li>Self-financing</li><li>Bank loans</li><li>Capital increase</li><li>Bonds (large firms only)</li></ul></div>
+      <div class="card fragment fade-up" style="--c:var(--neg)"><div class="ic">The limits</div><h3>Why young firms are refused</h3>
+        <ul><li>Banks ask for <b>collateral</b></li><li>No <b>track record</b> of accounts</li><li><b>Intangible</b> assets are hard to pledge</li><li>Slow, costly procedures</li></ul></div>
+    </div>
+    <p class="big-msg fragment fade-up">Modern methods fill this gap: they finance <em>young, small and innovative</em> companies.</p>
+  </div>
+  <aside class="notes">Classic financing means self-financing, bank loans, a capital increase, or bonds for large companies. [click] But a young company is often refused: the bank asks for collateral, the company has no history of accounts, its value is in intangible assets like software or a brand, and the process is slow. [click] Modern methods were created exactly for this gap.</aside>
+</section>
+
+<!-- 4 CROWDFUNDING -->
+<section data-cam="focus" data-node="0">
+  <div class="panel">
+    <p class="kicker" data-a>01 · Crowdfunding</p>
+    <h2 class="t" data-a>Financing by the crowd</h2>
+    <p class="def" data-a>Many people each give a <b>small amount</b> through an <b>online platform</b>.</p>
+    <svg class="flow" viewBox="0 0 820 170" data-a>
+      <rect class="box" x="0" y="30" width="220" height="100" rx="14"/><text class="bt" x="110" y="76" text-anchor="middle">The crowd</text><text class="bs" x="110" y="102" text-anchor="middle">many contributors</text>
+      <rect class="box" x="300" y="30" width="220" height="100" rx="14"/><text class="bt" x="410" y="76" text-anchor="middle">Platform</text><text class="bs" x="410" y="102" text-anchor="middle">runs the campaign</text>
+      <rect class="box" x="600" y="30" width="220" height="100" rx="14"/><text class="bt" x="710" y="76" text-anchor="middle">Project owner</text><text class="bs" x="710" y="102" text-anchor="middle">receives the funds</text>
+      <g class="fragment custom" data-draw data-coins="loop" data-color="#6d3fa8">
+        <path class="arrow" d="M224 80 L294 80" stroke="#6d3fa8"/><text class="al" x="259" y="20" text-anchor="middle">funds</text>
+        <path class="arrow" d="M524 80 L594 80" stroke="#6d3fa8"/><text class="al" x="559" y="20" text-anchor="middle">− fee</text>
+      </g>
+    </svg>
+    <div class="chips fragment fade-up">
+      <div class="chip"><b>Donation</b><span>nothing in return</span></div>
+      <div class="chip"><b>Reward</b><span>a product (pre-sale)</span></div>
+      <div class="chip"><b>Lending</b><span>repaid with interest</span></div>
+      <div class="chip"><b>Equity</b><span>shares of the firm</span></div>
+    </div>
+    <div class="pc fragment fade-up">
+      <div class="pro"><h4>Advantages</h4><ul><li>No collateral needed</li><li>Tests the market first</li></ul></div>
+      <div class="con"><h4>Limits</h4><ul><li>Mostly small amounts</li><li>Idea exposed publicly</li></ul></div>
+    </div>
+    <p class="tn fragment fade-up"><b>Tunisia:</b> crowdfunding law n° 2020-37, platforms supervised by the CMF.</p>
+  </div>
+  <aside class="notes">Crowdfunding: many people each give a small amount through an online platform. [click] The money flows from the crowd to the platform, which keeps a fee, and then to the project. [click] There are four types: donation, reward, which is really a pre-sale, lending with interest, and equity, where the crowd receives shares. [click] Its strengths: no collateral, and it tests the market before launching. Its limits: the amounts are usually small, and the idea is public. [click] In Tunisia, a crowdfunding law was adopted in 2020 and the platforms are supervised by the CMF. (VERIFY the law number and the licensed platforms on cmf.tn.)</aside>
+</section>
+
+<!-- 5 PRIVATE EQUITY -->
+<section data-cam="focus" data-node="1">
+  <div class="panel">
+    <p class="kicker" data-a>02 · Private equity</p>
+    <h2 class="t" data-a>Business angels and venture capital</h2>
+    <p class="def" data-a>Investors buy a <b>share of the company</b> and earn when they sell it later.</p>
+    <svg class="flow" viewBox="0 0 820 300" data-a>
+      <line class="axis" x1="20" y1="150" x2="810" y2="150"/>
+      <text class="bs" x="810" y="140" text-anchor="end">time</text>
+      <text class="bs" x="22" y="18">cash of the company</text>
+      <g class="fragment custom" data-draw data-color="#1f4e9c">
+        <path class="arrow" d="M30 150 C 110 150, 150 250, 240 248 S 400 160, 500 120 S 690 70, 800 64" stroke="#1f4e9c" style="stroke-width:4"/>
+        <text class="al" x="210" y="285" text-anchor="middle" style="fill:var(--neg)">"valley of death"</text>
+      </g>
+      <g class="fragment fade-in">
+        <text class="bt" x="110" y="60" text-anchor="middle">Seed</text><text class="bs" x="110" y="84" text-anchor="middle">business angels</text>
+        <text class="bt" x="330" y="60" text-anchor="middle">Start-up</text><text class="bs" x="330" y="84" text-anchor="middle">venture capital</text>
+        <text class="bt" x="540" y="214" text-anchor="middle">Growth</text><text class="bs" x="540" y="238" text-anchor="middle">growth capital</text>
+        <text class="bt" x="730" y="214" text-anchor="middle">Maturity</text><text class="bs" x="730" y="238" text-anchor="middle">LBO, stock market</text>
+      </g>
+    </svg>
+    <div class="pc fragment fade-up">
+      <div class="pro"><h4>Advantages</h4><ul><li>Large amounts, no repayment</li><li>Advice and contacts</li></ul></div>
+      <div class="con"><h4>Limits</h4><ul><li>Founders lose shares</li><li>Only high-growth projects</li></ul></div>
+    </div>
+    <p class="tn fragment fade-up"><b>Tunisia:</b> venture capital through SICAR companies.</p>
+  </div>
+  <aside class="notes">Private equity: investors buy a share of the company, and they earn money when they sell that share later. [click] A young company first loses cash: this is the valley of death. [click] At each stage a different investor steps in: business angels at the seed stage, venture capital funds for the start-up, growth capital later, and finally an LBO or a stock market listing. [click] It brings large amounts with no repayment, plus advice. But the founders give away part of their company, and investors only choose projects that can grow fast. [click] In Tunisia, venture capital goes through companies called SICAR. (VERIFY.)</aside>
+</section>
+
+<!-- 6 LEASING -->
+<section data-cam="focus" data-node="2">
+  <div class="panel">
+    <p class="kicker" data-a>03 · Leasing (crédit-bail)</p>
+    <h2 class="t" data-a>Rent the asset, buy it later</h2>
+    <p class="def" data-a>A leasing company <b>buys the equipment</b> and <b>rents it</b> to the firm.</p>
+    <svg class="flow" viewBox="0 0 820 340" data-a>
+      <rect class="box" x="300" y="0" width="220" height="80" rx="14"/><text class="bt" x="410" y="36" text-anchor="middle">Leasing company</text><text class="bs" x="410" y="60" text-anchor="middle">owns the asset</text>
+      <rect class="box" x="20" y="232" width="220" height="80" rx="14"/><text class="bt" x="130" y="268" text-anchor="middle">Company</text><text class="bs" x="130" y="292" text-anchor="middle">uses the asset</text>
+      <rect class="box" x="580" y="232" width="220" height="80" rx="14"/><text class="bt" x="690" y="268" text-anchor="middle">Supplier</text><text class="bs" x="690" y="292" text-anchor="middle">sells the asset</text>
+      <g class="fragment custom" data-draw data-color="#7b8498"><path class="arrow" d="M244 254 L574 254" stroke="#7b8498" stroke-dasharray="2 8"/><text class="al" x="410" y="244" text-anchor="middle">1 · chooses</text></g>
+      <g class="fragment custom" data-draw data-coins="once" data-color="#1f4e9c"><path class="arrow" d="M500 84 L640 226" stroke="#1f4e9c"/><text class="al" x="610" y="150">2 · buys</text></g>
+      <g class="fragment custom" data-draw data-color="#1a2134"><path class="arrow" d="M574 292 L244 292" stroke="#1a2134"/><text class="al" x="410" y="326" text-anchor="middle">3 · delivers</text></g>
+      <g class="fragment custom" data-draw data-coins="loop" data-color="#6d3fa8"><path class="arrow" d="M170 226 L320 84" stroke="#6d3fa8"/><text class="al" x="150" y="150" text-anchor="end">4 · pays rent</text></g>
+    </svg>
+    <div class="pc fragment fade-up">
+      <div class="pro"><h4>Advantages</h4><ul><li>Up to 100 % financed</li><li>The asset is the guarantee</li></ul></div>
+      <div class="con"><h4>Limits</h4><ul><li>Costs more than a loan</li><li>Not the owner until the end</li></ul></div>
+    </div>
+    <p class="tn fragment fade-up"><b>End of contract:</b> purchase option, return or renew. <b>Tunisia:</b> e.g. Tunisie Leasing et Factoring, Hannibal Lease.</p>
+  </div>
+  <aside class="notes">Leasing, or crédit-bail. [click] The company chooses its equipment. [click] The leasing company buys it from the supplier, [click] the supplier delivers it to the company, [click] and the company pays a monthly rent. [click] It can finance up to 100 percent of the asset, and the asset itself is the guarantee. But in total it costs more than a loan, and the company is not the owner during the contract. [click] At the end, the company can buy the asset for a small residual price, return it, or renew. In Tunisia, several listed leasing companies offer this. (VERIFY names.)</aside>
+</section>
+
+<!-- 7 FACTORING -->
+<section data-cam="focus" data-node="3">
+  <div class="panel">
+    <p class="kicker" data-a>04 · Factoring (affacturage)</p>
+    <h2 class="t" data-a>Turn invoices into cash today</h2>
+    <p class="def" data-a>The company <b>sells its unpaid invoices</b> to a factor, who pays now.</p>
+    <svg class="flow" viewBox="0 0 820 300" data-a>
+      <rect class="box" x="20" y="0" width="220" height="76" rx="14"/><text class="bt" x="130" y="46" text-anchor="middle">Company</text>
+      <rect class="box" x="580" y="0" width="220" height="76" rx="14"/><text class="bt" x="690" y="46" text-anchor="middle">Customer</text>
+      <rect class="box" x="300" y="220" width="220" height="76" rx="14"/><text class="bt" x="410" y="266" text-anchor="middle">Factor</text>
+      <g class="fragment custom" data-draw data-color="#1a2134"><path class="arrow" d="M244 38 L574 38" stroke="#1a2134"/><text class="al" x="410" y="28" text-anchor="middle">1 · sells, paid in 60 days</text></g>
+      <g class="fragment custom" data-draw data-color="#7b8498"><path class="arrow" d="M90 80 L290 238" stroke="#7b8498"/><text class="al" x="170" y="190" text-anchor="end">2 · sells the invoice</text></g>
+      <g class="fragment custom" data-draw data-coins="once" data-color="#1f4e9c"><path class="arrow" d="M330 218 L160 80" stroke="#1f4e9c"/><text class="al" x="262" y="132">3 · pays now</text></g>
+      <g class="fragment custom" data-draw data-coins="once" data-color="#6d3fa8"><path class="arrow" d="M690 80 L524 236" stroke="#6d3fa8"/><text class="al" x="640" y="178">4 · pays at due date</text></g>
+    </svg>
+    <div class="fragment fade-up">
+      <div class="calc">
+        <span>Invoice</span><span>10,000 TND</span>
+        <span>Interest: 10,000 × 9 % × 60 / 360</span><span>− 150</span>
+        <span>Factoring commission (1 %)</span><span>− 100</span>
+        <span class="tot">Cash received today</span><span class="tot" data-count="9750">9,750 TND</span>
+      </div>
+    </div>
+    <div class="pc fragment fade-up" style="margin-top:14px">
+      <div class="pro"><h4>Advantages</h4><ul><li>Immediate cash, lower BFR</li><li>The factor collects</li></ul></div>
+      <div class="con"><h4>Limits</h4><ul><li>Costly</li><li>Only for B2B sales</li></ul></div>
+    </div>
+  </div>
+  <aside class="notes">Factoring, or affacturage. [click] The company sells to a customer who will pay in 60 days. [click] Instead of waiting, it sells the invoice to a factor, [click] who pays it now, [click] and the customer pays the factor at the due date. [click] A quick example: an invoice of 10,000 dinars, 60 days, 9 percent a year: 150 dinars of interest, plus a 1 percent commission, so the company receives 9,750 dinars today. These figures are illustrative. [click] It gives immediate cash and reduces the working capital need, the BFR. But it is expensive, and it only works for sales to other businesses.</aside>
+</section>
+
+<!-- 8 MICROFINANCE -->
+<section data-cam="focus" data-node="4">
+  <div class="panel">
+    <p class="kicker" data-a>05 · Microfinance</p>
+    <h2 class="t" data-a>Small loans for the excluded</h2>
+    <p class="def" data-a>Credit for people and micro-firms that <b>banks do not serve</b>.</p>
+    <div class="cards c3">
+      <div class="card" data-a style="--c:var(--violet)"><div class="ic">For whom?</div><h3>Micro-entrepreneurs</h3><p>Artisans, farmers, small traders, people with no bank access.</p></div>
+      <div class="card fragment fade-up" style="--c:var(--violet)"><div class="ic">How?</div><h3>Small, short, close</h3><p>Small amounts, short terms, little or no collateral, regular follow-up.</p></div>
+      <div class="card fragment fade-up" style="--c:var(--neg)"><div class="ic">Trade-off</div><h3>Easy access, higher rate</h3><p>Interest rates are higher than bank loans, and amounts are limited.</p></div>
+    </div>
+    <p class="tn fragment fade-up"><b>Tunisia:</b> institutions supervised by the ACM, e.g. Enda Tamweel; also the BTS.</p>
+  </div>
+  <aside class="notes">Microfinance gives credit to people and micro-businesses that banks do not serve: artisans, farmers, small traders. [click] The loans are small and short, with little or no collateral, and a close follow-up of the borrower. [click] The trade-off: access is easy, but the interest rate is higher and the amounts are limited. [click] In Tunisia, microfinance institutions are supervised by the ACM; Enda Tamweel is the best known, and the BTS also lends to small projects. (VERIFY.)</aside>
+</section>
+
+<!-- 9 ISLAMIC -->
+<section data-cam="focus" data-node="5">
+  <div class="panel">
+    <p class="kicker" data-a>06 · Islamic finance</p>
+    <h2 class="t" data-a>Financing backed by real assets</h2>
+    <div class="chips" data-a>
+      <div class="chip"><b>No interest</b><span>no riba</span></div>
+      <div class="chip"><b>No speculation</b><span>no gharar</span></div>
+      <div class="chip"><b>Shared risk</b><span>profit and loss</span></div>
+      <div class="chip"><b>Real asset</b><span>behind every deal</span></div>
+    </div>
+    <table class="tb fragment fade-up">
+      <tr><th>Instrument</th><th>How it works</th><th>Classic equivalent</th></tr>
+      <tr><td>Murabaha</td><td>The bank buys the asset and resells it with a known margin</td><td>Investment loan</td></tr>
+      <tr><td>Ijara</td><td>The bank buys the asset and rents it</td><td>Leasing</td></tr>
+      <tr><td>Musharaka</td><td>Bank and firm invest together, share profit and loss</td><td>Private equity</td></tr>
+      <tr><td>Sukuk</td><td>Certificates of ownership in an income-producing asset</td><td>Bonds</td></tr>
+    </table>
+    <p class="tn fragment fade-up"><b>Tunisia:</b> e.g. Banque Zitouna, Al Baraka Bank, Wifak International Bank.</p>
+  </div>
+  <aside class="notes">Islamic finance follows four principles: no interest, no excessive uncertainty or speculation, sharing of profit and loss, and a real asset behind every operation. [click] In practice: Murabaha, where the bank buys an asset and resells it with a known margin, close to an investment loan. Ijara, which is Islamic leasing. Musharaka, a partnership close to private equity. And sukuk, close to bonds, but backed by real assets. [click] In Tunisia, several banks offer these products. (VERIFY names.)</aside>
+</section>
+
+<!-- 10 DIGITAL -->
+<section data-cam="focus" data-node="6">
+  <div class="panel">
+    <p class="kicker" data-a>07 · Digital finance</p>
+    <h2 class="t" data-a>Fintech changes the access</h2>
+    <div class="cards c2">
+      <div class="card" data-a style="--c:var(--cyan)"><div class="ic">Online lending</div><h3>Credit in days</h3><p>Decisions based on data instead of collateral.</p></div>
+      <div class="card fragment fade-up" style="--c:var(--cyan)"><div class="ic">Mobile payment</div><h3>E-wallets</h3><p>Faster collection, fewer cash problems.</p></div>
+      <div class="card fragment fade-up" style="--c:var(--cyan)"><div class="ic">Revenue-based</div><h3>Repaid from sales</h3><p>A share of monthly revenue, no fixed instalment.</p></div>
+      <div class="card fragment fade-up" style="--c:var(--cyan)"><div class="ic">Blockchain</div><h3>Tokens</h3><p>Digital tokens that represent shares or assets.</p></div>
+    </div>
+    <div class="pc fragment fade-up">
+      <div class="pro"><h4>Advantages</h4><ul><li>Fast, online, 24/7</li><li>Reaches the unbanked</li></ul></div>
+      <div class="con"><h4>Limits</h4><ul><li>Regulation still evolving</li><li>Cyber and crypto risk</li></ul></div>
+    </div>
+    <p class="tn fragment fade-up"><b>Tunisia:</b> BCT regulatory sandbox for fintech; e-Dinar by La Poste.</p>
+  </div>
+  <aside class="notes">Finally, digital finance. Online lenders decide in days using data instead of collateral. [click] Mobile payment and e-wallets speed up cash collection. [click] Revenue-based financing is repaid as a share of monthly sales. [click] And blockchain tokens can represent shares or assets. [click] It is fast and reaches people outside banks, but the regulation is still evolving and the risks are new. [click] In Tunisia, the central bank runs a regulatory sandbox for fintech, and La Poste offers the e-Dinar. (VERIFY.)</aside>
+</section>
+
+<!-- 11 FINDER -->
+<section data-cam="finder" class="solo">
+  <div class="panel wide">
+    <p class="kicker" data-a>Comparison</p>
+    <h2 class="t" data-a>Which method for which need?</h2>
+    <div class="finder" data-a>
+      <div class="needs" id="needs">
+        <p>Click a company's need:</p>
+        <button class="need" data-m="2,5">Buy equipment</button>
+        <button class="need" data-m="3">Cash stuck in invoices</button>
+        <button class="need" data-m="0">Launch a product</button>
+        <button class="need" data-m="1">Grow very fast</button>
+        <button class="need" data-m="4,0,6">No collateral, small amount</button>
+        <button class="need" data-m="5">Respect Islamic principles</button>
+      </div>
+      <table class="tb" id="cmp" style="margin-top:0;font-size:19px">
+        <tr><th>Method</th><th>Best for</th><th>Cost</th><th>Control</th><th>Main limit</th></tr>
+        <tr class="row" data-i="0"><td><span class="dot" style="background:var(--gold)"></span>Crowdfunding</td><td>Consumer products</td><td>medium</td><td>kept*</td><td>Small amounts</td></tr>
+        <tr class="row" data-i="1"><td><span class="dot" style="background:var(--blue)"></span>Private equity</td><td>High-growth start-ups</td><td>high</td><td>shared</td><td>Dilution</td></tr>
+        <tr class="row" data-i="2"><td><span class="dot" style="background:var(--teal)"></span>Leasing</td><td>Equipment, vehicles</td><td>medium</td><td>kept</td><td>Higher total cost</td></tr>
+        <tr class="row" data-i="3"><td><span class="dot" style="background:var(--coral)"></span>Factoring</td><td>B2B invoices</td><td>high</td><td>kept</td><td>Only B2B</td></tr>
+        <tr class="row" data-i="4"><td><span class="dot" style="background:var(--violet)"></span>Microfinance</td><td>Micro-entrepreneurs</td><td>high</td><td>kept</td><td>Small amounts</td></tr>
+        <tr class="row" data-i="5"><td><span class="dot" style="background:var(--green)"></span>Islamic finance</td><td>Asset-backed needs</td><td>medium</td><td>kept</td><td>Fewer products</td></tr>
+        <tr class="row" data-i="6"><td><span class="dot" style="background:var(--cyan)"></span>Digital finance</td><td>Small digital firms</td><td>varies</td><td>kept</td><td>New regulation</td></tr>
+      </table>
+    </div>
+    <p class="tn" data-a style="margin-top:14px">* except equity crowdfunding, where the crowd receives shares.</p>
+  </div>
+  <aside class="notes">To compare them, let us choose a need. [Click "Buy equipment"] Leasing, or Ijara in Islamic finance. [Click "Cash stuck in invoices"] Factoring. [Click "Launch a product"] Crowdfunding, which also tests the market. [Click "Grow very fast"] Private equity. [Click "No collateral"] Microfinance, crowdfunding or digital lenders. There is no best method in general, only the best method for a given need. You can also ask someone in the audience to choose a need.</aside>
+</section>
+
+<!-- 12 CONCLUSION -->
+<section data-cam="final">
+  <div class="panel">
+    <p class="kicker" data-a>Conclusion</p>
+    <h2 class="t" data-a>Key takeaways</h2>
+    <ol class="take">
+      <li class="fragment fade-up">Modern methods finance companies that <b>banks avoid</b>.</li>
+      <li class="fragment fade-up">Each method fits a <b>specific need</b>: an asset, invoices, growth.</li>
+      <li class="fragment fade-up">They <b>complement</b> bank loans rather than replace them.</li>
+      <li class="fragment fade-up">Digital and Islamic finance are <b>growing fast</b>, including in Tunisia.</li>
+    </ol>
+    <p class="thanks fragment fade-up">Thank you. Questions?</p>
+  </div>
+  <aside class="notes">To conclude. [click] Modern methods finance the companies that banks avoid: young, small, without collateral. [click] Each one fits a specific need. [click] They complement bank loans; they do not replace them. [click] And digital and Islamic finance are growing fast, including in Tunisia. [click] Thank you for your attention; I am happy to take your questions.</aside>
+</section>
+
+</div></div>
+
+<script src="lib/reveal.js"></script>
+<script src="lib/notes.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script>
+(function(){
+"use strict";
+var COLORS = ["#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0"];   /* one structure colour; methods differ by number */
+var NAMES = ["Crowdfunding","Private equity","Leasing","Factoring","Microfinance","Islamic finance","Digital finance"];
+var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* keep animations on real time, even if the laptop drops frames */
+gsap.ticker.lagSmoothing(0);
+
+/* no 3D scene any more: real photos instead (kept as a stub so the slide code stays simple) */
+var S = (function(){
+  var PHOTOS = [["crowdfunding","Many small contributions add up"],["private-equity","Investors bring capital and advice"],
+                ["leasing","Use the equipment now, pay monthly"],["factoring","Unpaid invoices turned into cash today"],
+                ["microfinance","A small loan, a working business"],["islamic-finance","Finance built on real assets"],
+                ["digital-finance","Payment and credit from a phone"]];
+  var wheel = document.getElementById("wheel"), stage = wheel.querySelector(".stage"), ring = document.getElementById("ring");
+  if (/[?&]snap/.test(location.search)) document.documentElement.classList.add("snap");
+  var N = PHOTOS.length, A = 360/N, R = 580, cards = [];
+  PHOTOS.forEach(function(p, i){
+    var c = document.createElement("div"); c.className = "wc";
+    c.innerHTML = '<img src="photos/' + p[0] + '.jpg" alt=""><div class="cap"><b>' + ("0" + (i + 1)) + " · " + NAMES[i] + "</b>" + p[1] + "</div>";
+    ring.appendChild(c); cards.push(c);
+  });
+  var st = {rot:0, spin:0, tilt:0, lift:0, zoom:1}, focus = -1;
+  function place(){
+    var s = document.querySelector(".reveal .slides"); if (!s) return;
+    var b = s.getBoundingClientRect(), k = b.width/1600;
+    stage.style.transform = "translate(" + b.left + "px," + b.top + "px) scale(" + k + ")";
+  }
+  window.addEventListener("resize", function(){ setTimeout(place, 50); });
+  function draw(){
+    /* zoom 1 + tilt 0: the front card is drawn at exactly 500 x 772, aligned with the text card */
+    ring.parentNode.style.transform = "scale(" + st.zoom + ")";
+    ring.style.transform = "translateZ(" + (-R) + "px) rotateX(" + st.tilt + "deg) rotateY(" + (-st.rot) + "deg)";
+    cards.forEach(function(c, i){
+      var rel = ((i*A - st.rot) % 360 + 540) % 360 - 180, f = Math.cos(rel*Math.PI/180);   /* 1 = facing us */
+      var front = focus === i ? 1 : 0, sc = 1;
+      c.style.transform = "rotateY(" + (i*A) + "deg) translateZ(" + R + "px) scale(" + sc + ")";
+      /* front card fully opaque; side cards fade; cards at the back of the wheel stay faint */
+      c.style.opacity = front ? 1 : f > 0 ? (focus >= 0 ? .35 : .55) + .45*f : .14 + .1*(1 + f);
+      c.style.filter = focus >= 0 && !front ? "grayscale(.5)" : "none";
+    });
+  }
+  gsap.ticker.add(function(time, dt){ if (!reduce) st.rot += st.spin*dt/1000; draw(); });
+  /* auto mode: hold a photo aligned with the card, then turn one step to the next, and repeat */
+  var auto = null;
+  function stopAuto(){ if (auto){ auto.kill(); auto = null; } gsap.killTweensOf(st, "rot"); }
+  function step(){
+    var target = (Math.round(st.rot/A) + 1)*A;
+    gsap.to(st, {rot:target, duration:reduce ? 0 : 1.3, ease:"power3.inOut", onComplete:function(){ auto = gsap.delayedCall(2.5, step); }});
+  }
+  function set(mode, i){
+    place();
+    var solo = mode === "finder" || mode === "gap";
+    wheel.classList.toggle("off", solo);
+    wheel.classList.toggle("focus", mode === "focus");
+    focus = mode === "focus" ? i : -1;
+    if (mode === "focus"){
+      /* turn the shortest way so that card i faces the audience */
+      var target = i*A, d = ((target - st.rot) % 360 + 540) % 360 - 180;
+      stopAuto(); st.spin = 0;
+      gsap.to(st, {rot:st.rot + d, tilt:0, zoom:1, duration:reduce ? 0 : 1.4, ease:"power3.inOut", overwrite:"auto"});
+      var img = cards[i].querySelector("img");
+      if (!reduce) gsap.fromTo(img, {scale:1.12}, {scale:1, duration:12, ease:"none", overwrite:true});
+    } else {
+      gsap.to(st, {tilt:0, zoom:1, duration:1.2, ease:"power2.inOut"});   /* same size as the card beside it, just turning */
+      stopAuto(); st.spin = 0;
+      if (!solo){ gsap.to(st, {rot:Math.round(st.rot/A)*A, duration:.8, ease:"power2.out", onComplete:function(){ auto = gsap.delayedCall(2.5, step); }}); }
+    }
+  }
+  return {set:set, highlight:function(){}, place:place};
+})();
+
+/* ======================= slide animations ======================= */
+function zoomPhoto(slide){
+  var img = slide.querySelector(".photo img"); if (!img) return;
+  if (reduce){ gsap.set(img, {scale:1}); return; }
+  gsap.fromTo(img, {scale:1.12, xPercent:-1.5}, {scale:1.0, xPercent:1.5, duration:14, ease:"none", overwrite:true});
+}
+function animateIn(slide){
+  var els = slide.querySelectorAll("[data-a]");
+  if (!els.length || reduce) return;
+  gsap.fromTo(els, {opacity:0, y:26}, {opacity:1, y:0, duration:.75, ease:"power3.out", stagger:.08, overwrite:true});
+}
+function prepDraw(g){
+  g.querySelectorAll("path.arrow").forEach(function(p){
+    var L = p.getTotalLength(); p._len = L;
+    if (!p._dash) p._dash = p.getAttribute("stroke-dasharray");
+    p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+  });
+  g.querySelectorAll("text").forEach(function(t){ t.style.opacity = 0; });
+  g.querySelectorAll(".coin").forEach(function(c){ c.remove(); });
+  if (g._loops) g._loops.forEach(function(tw){ tw.kill(); }); g._loops = [];
+}
+function head(p, color){
+  /* arrowhead at the end of the path */
+  var L = p._len, a = p.getPointAtLength(L), b = p.getPointAtLength(Math.max(0, L - 12));
+  var ang = Math.atan2(a.y - b.y, a.x - b.x), s = 13;
+  var pts = [[a.x, a.y], [a.x - s*Math.cos(ang - .45), a.y - s*Math.sin(ang - .45)], [a.x - s*Math.cos(ang + .45), a.y - s*Math.sin(ang + .45)]];
+  var h = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  h.setAttribute("points", pts.map(function(q){ return q.join(","); }).join(" "));
+  h.setAttribute("fill", color); h.setAttribute("class", "coin"); h.style.opacity = 0;
+  p.parentNode.appendChild(h);
+  gsap.to(h, {opacity:1, duration:.25});
+}
+function coin(p, color, loop, g){
+  var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c.setAttribute("r", 7); c.setAttribute("fill", color); c.setAttribute("class", "coin");
+  c.style.filter = "drop-shadow(0 0 6px " + color + ")";
+  var p0 = p.getPointAtLength(0); c.setAttribute("cx", p0.x); c.setAttribute("cy", p0.y); c.style.opacity = 0;
+  p.parentNode.appendChild(c);
+  var o = {u:0}, L = p._len;
+  var tw = gsap.to(o, {u:1, duration:1.1, ease:loop ? "none" : "power1.inOut", repeat:loop ? -1 : 0, repeatDelay:loop ? .25 : 0,
+    onUpdate:function(){ var q = p.getPointAtLength(o.u*L); c.setAttribute("cx", q.x); c.setAttribute("cy", q.y); c.style.opacity = loop ? Math.sin(o.u*Math.PI) : 1 - Math.max(0, o.u - .85)*6; }});
+  g._loops.push(tw);
+}
+function playDraw(g){
+  prepDraw(g);
+  var color = g.getAttribute("data-color") || "#fff", mode = g.getAttribute("data-coins");
+  var paths = g.querySelectorAll("path.arrow");
+  paths.forEach(function(p, i){
+    gsap.to(p.style, {strokeDashoffset:0, duration:reduce ? 0 : .8, delay:i*.15, ease:"power2.inOut", onComplete:function(){
+      if (p._dash){ p.style.strokeDasharray = p._dash; }
+      if (!p._dash) head(p, p.getAttribute("stroke") || color);
+      if (mode && !reduce){ coin(p, color, mode === "loop", g); if (mode === "loop"){ setTimeout(function(){ if (g.classList.contains("visible")) coin(p, color, true, g); }, 550); } }
+    }});
+  });
+  gsap.to(g.querySelectorAll("text"), {opacity:1, duration:.5, delay:.45});
+}
+function counter(el){
+  var to = +el.getAttribute("data-count"), o = {v:0};
+  gsap.to(o, {v:to, duration:1.2, ease:"power2.out", onUpdate:function(){ el.textContent = Math.round(o.v).toLocaleString("en-US") + " TND"; }});
+}
+
+/* ======================= finder ======================= */
+var cmp = document.getElementById("cmp");
+document.querySelectorAll("#needs .need").forEach(function(b){
+  b.addEventListener("click", function(e){
+    e.stopPropagation();
+    var on = !b.classList.contains("on");
+    document.querySelectorAll("#needs .need").forEach(function(x){ x.classList.remove("on"); });
+    if (!on){ cmp.classList.remove("filter"); S.highlight(null); return; }
+    b.classList.add("on");
+    var list = b.getAttribute("data-m").split(",").map(Number);
+    cmp.classList.add("filter");
+    cmp.querySelectorAll("tr.row").forEach(function(r){ r.classList.toggle("hit", list.indexOf(+r.getAttribute("data-i")) >= 0); });
+    S.highlight(list);
+  });
+});
+function resetFinder(){
+  document.querySelectorAll("#needs .need").forEach(function(x){ x.classList.remove("on"); });
+  cmp.classList.remove("filter");
+}
+
+/* ======================= reveal ======================= */
+function enter(slide){
+  var cam = slide.getAttribute("data-cam") || "title";
+  S.set(cam, cam === "focus" ? +slide.getAttribute("data-node") : -1);
+  slide.querySelectorAll("[data-draw]").forEach(function(g){ if (g.classList.contains("visible")) playDraw(g); else prepDraw(g); });
+  if (cam !== "finder") resetFinder();
+  animateIn(slide);
+  zoomPhoto(slide);
+}
+Reveal.initialize({
+  width:1600, height:900, margin:0.03, minScale:0.2, maxScale:2,
+  hash:true, center:false, controls:false, progress:true, slideNumber:"c/t",
+  transition:"fade", transitionSpeed:"default", backgroundTransition:"none",
+  plugins:[RevealNotes]
+}).then(function(){ S.place(); enter(Reveal.getCurrentSlide()); });
+Reveal.on("resize", function(){ S.place(); });
+Reveal.on("slidechanged", function(e){ enter(e.currentSlide); });
+Reveal.on("fragmentshown", function(e){
+  e.fragments.forEach(function(f){
+    if (f.hasAttribute("data-draw")) playDraw(f);
+    f.querySelectorAll("[data-count]").forEach(counter);
+  });
+});
+Reveal.on("fragmenthidden", function(e){
+  e.fragments.forEach(function(f){ if (f.hasAttribute("data-draw")) prepDraw(f); });
+});
+})();
+</script>
+</body>
+</html>

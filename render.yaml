@@ -1,0 +1,17 @@
+# Render Blueprint: deploys this folder as a free static site (no build step).
+services:
+  - type: web
+    name: modern-financing-methods
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /photos/*
+        name: Cache-Control
+        value: public, max-age=604800
+      - path: /lib/*
+        name: Cache-Control
+        value: public, max-age=604800
