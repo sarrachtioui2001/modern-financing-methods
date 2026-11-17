@@ -441,7 +441,9 @@ html.snap #wheel{transition:none}   /* ?snap (screenshots only): no fade, so cap
 "use strict";
 var COLORS = ["#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0"];   /* one structure colour; methods differ by number */
 var NAMES = ["Crowdfunding","Private equity","Leasing","Factoring","Microfinance","Islamic finance","Digital finance"];
-var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* a presentation should always animate, even when Windows "Animation effects" is off;
+   add ?static to the address to switch animations off on purpose */
+var reduce = /[?&]static/.test(location.search);
 /* keep animations on real time, even if the laptop drops frames */
 gsap.ticker.lagSmoothing(0);
 
