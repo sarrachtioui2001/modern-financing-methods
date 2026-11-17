@@ -128,38 +128,12 @@ ol.take li::before{content:counter(k,decimal-leading-zero);position:absolute;lef
 ol.take b{color:var(--gold);font-weight:700}
 .thanks{font:700 64px var(--serif);margin-top:34px}
 
-/* real photos: rounded panel to the right of the card, slow zoom */
-.photo{position:absolute;top:64px;right:84px;width:500px;height:772px;margin:0;border-radius:20px;overflow:hidden;
-  box-shadow:0 18px 50px rgba(27,35,51,.16);background:#dfe3ea}
-.photo img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:50% 50%}
-.photo figcaption{position:absolute;left:0;right:0;bottom:0;padding:60px 26px 22px;font:600 20px/1.3 var(--sans);color:#fff;
-  background:linear-gradient(180deg,rgba(20,26,40,0) 0%,rgba(20,26,40,.78) 100%)}
-.photo figcaption span{display:block;font:700 14px var(--sans);letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
-.photo.hero{width:640px}
-/* the wheel: seven photo cards on a turning ring, right of the text card */
-#wheel{position:fixed;inset:0;z-index:1;pointer-events:none;transition:opacity .8s ease}
-#wheel.off{opacity:0}
-html.snap #wheel{transition:none}   /* ?snap (screenshots only): no fade, so captures show the final state */
-#wheel .stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0}
-/* the wheel sits exactly where a photo panel would: right of the card, same height (772 px), same top and bottom */
-#wheel .persp{position:absolute;left:1016px;top:64px;width:500px;height:772px;perspective:2200px;transform-origin:50% 50%}
-#wheel .ring{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
-#wheel .wc{position:absolute;left:-250px;top:-386px;width:500px;height:772px;border-radius:20px;overflow:hidden;
-  background:#dfe3ea;box-shadow:0 18px 40px rgba(27,35,51,.22)}
-#wheel .wc img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:50% 50%}
-#wheel .wc .cap{position:absolute;left:0;right:0;bottom:0;padding:70px 26px 24px;color:#fff;font:600 22px/1.3 var(--sans);
-  background:linear-gradient(180deg,rgba(20,26,40,0) 0%,rgba(20,26,40,.82) 100%)}
-#wheel .wc .cap b{display:block;font:700 15px var(--sans);letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:3px}
-#wheel .hub{position:absolute;left:-130px;top:-130px;width:260px;height:260px;font-size:26px!important;border-radius:50%;
-  background:var(--primary);color:#fff;display:grid;place-items:center;text-align:center;font:700 15px/1.2 var(--sans);
-  letter-spacing:.08em;text-transform:uppercase;box-shadow:0 14px 34px rgba(31,78,156,.35);transition:opacity .6s,transform .6s}
-#wheel.focus .hub{opacity:0}
 @media (prefers-reduced-motion: reduce){ #gl{transition:none} }
 </style>
 </head>
 <body>
-
-<div id="wheel" class="off" aria-hidden="true"><div class="stage"><div class="persp"><div class="ring" id="ring"><div class="hub">The<br>company</div></div></div></div></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div id="labels" aria-hidden="true"></div>
 
 <div class="reveal"><div class="slides">
 
@@ -172,7 +146,7 @@ html.snap #wheel{transition:none}   /* ?snap (screenshots only): no fade, so cap
     <hr class="rule" data-a>
     <p class="byline" data-a>Presented by <b>Sarra Chtioui</b><br>EPI Sousse · 2026–2027</p>
   </div>
-  <aside class="notes">Good morning. Today I present the modern methods a company can use to finance itself when a bank loan is not enough, or not possible. On the right, the seven methods turn like a wheel around the company; we will stop on each one.</aside>
+  <aside class="notes">Good morning. Today I present the modern methods a company can use to finance itself when a bank loan is not enough, or not possible. In the centre is the company; around it, the seven methods form a wheel, and we will stop on each one.</aside>
 </section>
 
 <!-- 2 AGENDA -->
@@ -436,87 +410,411 @@ html.snap #wheel{transition:none}   /* ?snap (screenshots only): no fade, so cap
 <script src="lib/reveal.js"></script>
 <script src="lib/notes.js"></script>
 <script src="lib/gsap.min.js"></script>
+<script src="lib/three.min.js"></script>
+<script src="lib/GLTFLoader.js"></script>
+<script src="lib/SkeletonUtils.js"></script>
+<script src="lib/models.js"></script>
 <script>
 (function(){
 "use strict";
 var COLORS = ["#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0","#2d5db0"];   /* one structure colour; methods differ by number */
 var NAMES = ["Crowdfunding","Private equity","Leasing","Factoring","Microfinance","Islamic finance","Digital finance"];
-/* a presentation should always animate, even when Windows "Animation effects" is off;
-   add ?static to the address to switch animations off on purpose */
+/* a presentation should always animate, even when Windows "Animation effects" is off; ?static switches animations off */
 var reduce = /[?&]static/.test(location.search);
 /* keep animations on real time, even if the laptop drops frames */
 gsap.ticker.lagSmoothing(0);
 
-/* no 3D scene any more: real photos instead (kept as a stub so the slide code stays simple) */
+/* ======================= 3D scene =======================
+   A light studio. The company (a small city block) sits in the centre; each financing
+   method is a small animated scene on a round stand around it. Buildings, trucks, trees,
+   coins and characters are Kenney models (CC0), embedded in lib/models.js. */
 var S = (function(){
-  var PHOTOS = [["crowdfunding","Many small contributions add up"],["private-equity","Investors bring capital and advice"],
-                ["leasing","Use the equipment now, pay monthly"],["factoring","Unpaid invoices turned into cash today"],
-                ["microfinance","A small loan, a working business"],["islamic-finance","Finance built on real assets"],
-                ["digital-finance","Payment and credit from a phone"]];
-  var wheel = document.getElementById("wheel"), stage = wheel.querySelector(".stage"), ring = document.getElementById("ring");
-  if (/[?&]snap/.test(location.search)) document.documentElement.classList.add("snap");
-  var N = PHOTOS.length, A = 360/N, R = 580, cards = [];
-  PHOTOS.forEach(function(p, i){
-    var c = document.createElement("div"); c.className = "wc";
-    c.innerHTML = '<img src="photos/' + p[0] + '.jpg" alt=""><div class="cap"><b>' + ("0" + (i + 1)) + " · " + NAMES[i] + "</b>" + p[1] + "</div>";
-    ring.appendChild(c); cards.push(c);
-  });
-  var st = {rot:0, spin:0, tilt:0, lift:0, zoom:1}, focus = -1;
-  function place(){
-    var s = document.querySelector(".reveal .slides"); if (!s) return;
-    var b = s.getBoundingClientRect(), k = b.width/1600;
-    stage.style.transform = "translate(" + b.left + "px," + b.top + "px) scale(" + k + ")";
+  var noop = {set:function(){}, highlight:function(){}};
+  if (!window.THREE) return noop;
+  var T = THREE, canvas = document.getElementById("gl"), renderer;
+  try { renderer = new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true}); } catch(e){ return noop; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.toneMapping = T.ACESFilmicToneMapping;          /* film-like contrast and highlights */
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  var scene = new T.Scene();
+  var camera = new T.PerspectiveCamera(40, 16/9, 0.1, 200);
+  /* photo-studio environment: soft boxes reflected in glossy surfaces */
+  (function(){
+    var pm = new T.PMREMGenerator(renderer), env = new T.Scene();
+    env.add(new T.Mesh(new T.SphereGeometry(30, 32, 16), new T.MeshBasicMaterial({color:0x5f5a52, side:T.BackSide})));
+    function softbox(w, h, col, k, x, y, z){
+      var m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({color:new T.Color(col).multiplyScalar(k), side:T.DoubleSide}));
+      m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
+    }
+    softbox(16, 6, 0xffffff, 1.6, 0, 22, 8);
+    softbox(6, 14, 0xfff1dd, 1.1, -22, 6, 6);
+    softbox(6, 14, 0xe4ecff, 0.9, 22, 6, -6);
+    scene.environment = pm.fromScene(env, 0.03).texture;
+  })();
+  scene.add(new T.HemisphereLight(0xffffff, 0xe6dfd0, 0.5));
+  var sun = new T.DirectionalLight(0xfff4e0, 1.3); sun.position.set(9, 18, 11); sun.castShadow = true;
+  sun.shadow.mapSize.set(4096, 4096);
+  var sc = sun.shadow.camera; sc.left = -15; sc.right = 15; sc.top = 15; sc.bottom = -15; sc.near = 1; sc.far = 60;
+  sun.shadow.bias = -0.0004; scene.add(sun);
+  var fill = new T.DirectionalLight(0xdfe8ff, 0.3); fill.position.set(-8, 6, -6); scene.add(fill);
+  var ground = new T.Mesh(new T.PlaneGeometry(90, 90), new T.ShadowMaterial({opacity:0.14}));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.17; ground.receiveShadow = true; scene.add(ground);
+
+  /* ---------- helpers ---------- */
+  function M(c, o){
+    var p = {color:c, roughness:.55, metalness:0, clearcoat:.18, clearcoatRoughness:.4, envMapIntensity:.45};
+    if (o) for (var k in o) p[k] = o[k];
+    return new T.MeshPhysicalMaterial(p);
   }
-  window.addEventListener("resize", function(){ setTimeout(place, 50); });
-  function draw(){
-    /* zoom 1 + tilt 0: the front card is drawn at exactly 500 x 772, aligned with the text card */
-    ring.parentNode.style.transform = "scale(" + st.zoom + ")";
-    ring.style.transform = "translateZ(" + (-R) + "px) rotateX(" + st.tilt + "deg) rotateY(" + (-st.rot) + "deg)";
-    cards.forEach(function(c, i){
-      var rel = ((i*A - st.rot) % 360 + 540) % 360 - 180, f = Math.cos(rel*Math.PI/180);   /* 1 = facing us */
-      var front = focus === i ? 1 : 0, sc = 1;
-      c.style.transform = "rotateY(" + (i*A) + "deg) translateZ(" + R + "px) scale(" + sc + ")";
-      /* front card fully opaque; side cards fade; cards at the back of the wheel stay faint */
-      c.style.opacity = front ? 1 : f > 0 ? (focus >= 0 ? .35 : .55) + .45*f : .14 + .1*(1 + f);
-      c.style.filter = focus >= 0 && !front ? "grayscale(.5)" : "none";
+  function add(parent, geo, mat, x, y, z){
+    var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+  }
+  var boxCache = {};
+  function box(w, h, d){   /* softly rounded edges: real objects never have razor-sharp corners */
+    var mn = Math.min(w, h, d);
+    if (mn < .12) return new T.BoxGeometry(w, h, d);
+    var key = [w, h, d].join("|"); if (boxCache[key]) return boxCache[key];
+    var r = Math.min(.06, mn/4), iw = w - 2*r, ih = h - 2*r, rr = Math.min(r*.8, iw/2, ih/2);
+    var s = new T.Shape(), x = -iw/2, y = -ih/2;
+    s.moveTo(x + rr, y); s.lineTo(x + iw - rr, y); s.quadraticCurveTo(x + iw, y, x + iw, y + rr);
+    s.lineTo(x + iw, y + ih - rr); s.quadraticCurveTo(x + iw, y + ih, x + iw - rr, y + ih);
+    s.lineTo(x + rr, y + ih); s.quadraticCurveTo(x, y + ih, x, y + ih - rr);
+    s.lineTo(x, y + rr); s.quadraticCurveTo(x, y, x + rr, y);
+    var g = new T.ExtrudeGeometry(s, {depth:d - 2*r, bevelEnabled:true, bevelThickness:r, bevelSize:r, bevelSegments:3, curveSegments:4});
+    g.translate(0, 0, -(d - 2*r)/2);
+    return (boxCache[key] = g);
+  }
+  function cyl(r1, r2, h, s){ return new T.CylinderGeometry(r1, r2, h, s || 32); }
+  var GOLD = new T.MeshPhysicalMaterial({color:0xd99a2b, metalness:1, roughness:.28, clearcoat:.4, clearcoatRoughness:.2, envMapIntensity:1.0});
+  /* architectural-model palette: matte white clay everywhere, one accent per scene, gold only for money */
+  var CLAY = new T.MeshStandardMaterial({color:0xf2efe9, roughness:.82, metalness:0, envMapIntensity:.35});
+  var WHITE = M(0xffffff, {roughness:.7, clearcoat:0}), CREAM = CLAY, INK = M(0x40444f, {roughness:.6, clearcoat:0});
+  function accent(i){ return new T.MeshStandardMaterial({color:COLORS[i], roughness:.6, metalness:0, envMapIntensity:.4}); }
+  var flatCoinGeo = cyl(.17, .17, .055, 28);
+  function flatCoin(parent, x, y, z){ return add(parent, flatCoinGeo, GOLD, x, y, z); }
+  function stack(parent, n, x, z){ var a = []; for (var i = 0; i < n; i++) a.push(flatCoin(parent, x, .03 + i*.058, z)); return a; }
+  function sector(r, a0, a1, h, mat){
+    var sh = new T.Shape(); sh.moveTo(0, 0); sh.absarc(0, 0, r, a0, a1, false); sh.lineTo(0, 0);
+    var g = new T.ExtrudeGeometry(sh, {depth:h, bevelEnabled:false, curveSegments:40}); g.rotateX(-Math.PI/2);
+    var m = new T.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true; return m;
+  }
+  function arc(a, b, u, lift){ return [a[0] + (b[0] - a[0])*u, a[1] + (b[1] - a[1])*u + Math.sin(Math.PI*u)*lift, a[2] + (b[2] - a[2])*u]; }
+  function ease(x){ x = Math.max(0, Math.min(1, x)); return x*x*(3 - 2*x); }
+
+  /* ---------- Kenney models ---------- */
+  var KIT = {}, mixers = [];
+  /* a clone of a model, scaled so that its height (or its longest side, with byLen) equals size, standing on y = 0 */
+  /* a clone of a model, scaled so that its height (or its longest side, with byLen) equals size, standing on y = 0.
+     Every model is repainted in matte clay (or in one accent colour), like an architect's study model. */
+  function kit(name, size, byLen, mat){
+    var g = KIT[name]; if (!g) return null;
+    var o = g.scene.clone(true), b = new T.Box3().setFromObject(o), s = new T.Vector3(); b.getSize(s);
+    var k = size/Math.max(byLen ? Math.max(s.x, s.z) : s.y, 1e-6);
+    o.scale.setScalar(k); o.position.set(-(b.min.x + b.max.x)/2*k, -b.min.y*k, -(b.min.z + b.max.z)/2*k);
+    o.traverse(function(m){ if (m.isMesh){ m.castShadow = true; m.receiveShadow = true; m.material = mat || CLAY; } });
+    var w = new T.Group(); w.add(o); w.userData.inner = o; return w;
+  }
+  function place(parent, obj, x, y, z, ry){ if (!obj) return null; obj.position.set(x, y || 0, z); obj.rotation.y = ry || 0; parent.add(obj); return obj; }
+  /* realistic animated people (Quaternius, CC0), in their own clothes and colours.
+     who = which person; clip = idle, wave, clap, sit, walk, interact or stand */
+  var CLIPS = {idle:[/(\||_)Idle$/], wave:[/Wave$/], clap:[/Clapping$/], sit:[/SitIdle$/, /Sitting$/], walk:[/(Walk|Walking)$/],
+               interact:[/Interact$/, /PickUp$/], stand:[/Standing$/, /Idle_Neutral$/, /(\||_)Idle$/]};
+  function findClip(anims, key){
+    var pats = CLIPS[key] || CLIPS.idle;
+    for (var p = 0; p < pats.length; p++) for (var a = 0; a < anims.length; a++) if (pats[p].test(anims[a].name)) return anims[a];
+    return key === "idle" ? anims[0] : findClip(anims, "idle");
+  }
+  var heights = {};
+  function person(parent, x, z, ry, clip, h, who){
+    var g = KIT[who || "business-man"], w = new T.Group();
+    if (!g || !T.SkeletonUtils){   /* fallback: a simple figure */
+      add(w, new T.CylinderGeometry(.075, .11, .42, 20), CLAY, 0, .21, 0); add(w, new T.SphereGeometry(.078, 20, 14), CLAY, 0, .58, 0);
+      w.scale.setScalar((h || .72)/.66); return place(parent, w, x, 0, z, ry);
+    }
+    if (!heights[who]){ var b0 = new T.Box3().setFromObject(g.scene), s0 = new T.Vector3(); b0.getSize(s0); heights[who] = [s0.y, b0.min.y]; }
+    var o = T.SkeletonUtils.clone(g.scene), k = (h || .74)/heights[who][0];
+    o.scale.setScalar(k); o.position.y = -heights[who][1]*k;
+    o.traverse(function(m){ if (m.isMesh || m.isSkinnedMesh){ m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; if (m.material) m.material.envMapIntensity = .5; } });
+    w.add(o);
+    var c = findClip(g.animations, clip);
+    if (c){ var mx = new T.AnimationMixer(o), act = mx.clipAction(c); act.play(); act.time = Math.random()*c.duration; mixers.push(mx); }
+    return place(parent, w, x, 0, z, ry);
+  }
+  /* simple clay furniture for the seated people */
+  function chair(parent, x, z, ry){
+    var c = new T.Group();
+    add(c, box(.3, .05, .3), WHITE, 0, .27, 0); add(c, box(.3, .34, .05), WHITE, 0, .46, -.13);
+    [[-.12, -.12], [.12, -.12], [-.12, .12], [.12, .12]].forEach(function(p){ add(c, cyl(.018, .018, .27, 8), INK, p[0], .135, p[1]); });
+    return place(parent, c, x, 0, z, ry);
+  }
+  function table(parent, x, z, w, d){
+    var tb = new T.Group();
+    add(tb, box(w, .05, d), WHITE, 0, .42, 0); add(tb, cyl(.05, .09, .4, 16), INK, 0, .2, 0);
+    return place(parent, tb, x, 0, z, 0);
+  }
+  /* a spinning gold coin that flies */
+  function flyCoin(parent){
+    var w = new T.Group(), m = add(w, flatCoinGeo, GOLD, 0, 0, 0); m.rotation.x = Math.PI/2;
+    parent.add(w); return w;
+  }
+  function building(parent, name, h, x, z, ry, mat){
+    var b = kit(name, h, false, mat);
+    if (!b){ b = new T.Group(); add(b, box(h*.55, h, h*.55), mat || CLAY, 0, h/2, 0); }
+    return place(parent, b, x, 0, z, ry);
+  }
+
+  var updates = [], dio = [], R = 8;
+  function base(i){
+    var a = i/COLORS.length*Math.PI*2 + Math.PI/2, g = new T.Group();
+    g.position.set(Math.cos(a)*R, 0, Math.sin(a)*R); g.rotation.y = Math.PI/2 - a;   /* local +z points outward, toward the camera */
+    add(g, cyl(1.75, 1.85, .16, 56), WHITE, 0, -.08, 0);
+    var ring = add(g, new T.TorusGeometry(1.78, .035, 8, 72), M(COLORS[i], {roughness:.5}), 0, .0, 0); ring.rotation.x = Math.PI/2; ring.castShadow = false;
+    scene.add(g);
+    var out = new T.Vector3(Math.cos(a), 0, Math.sin(a));
+    dio.push({g:g, out:out, s:{v:1}});
+    /* dashed path with coins sliding into the company */
+    var pts = [g.position.clone().addScaledVector(out, -1.95).setY(-.15), out.clone().multiplyScalar(3.0).setY(-.15)];
+    var ln = new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineDashedMaterial({color:0xbfb7a6, dashSize:.16, gapSize:.14}));
+    ln.computeLineDistances(); scene.add(ln);
+    var cs = [0, 1, 2].map(function(){ var m = new T.Mesh(cyl(.13, .13, .045, 20), GOLD); m.castShadow = true; scene.add(m); return m; });
+    updates.push(function(t){ cs.forEach(function(m, j){ var u = (t*.14 + i*.17 + j/3) % 1; m.position.lerpVectors(pts[0], pts[1], u); m.position.y = -.12; m.scale.setScalar(Math.min(1, u*8, (1 - u)*8)); }); });
+    return g;
+  }
+
+  function buildWorld(){
+    /* ---------- the company: a small city block ---------- */
+    var company = new T.Group(); scene.add(company);
+    add(company, cyl(3.0, 3.1, .16, 64), WHITE, 0, -.08, 0);
+    building(company, "building-small-c", 3.3, 0, -.45, 0);
+    building(company, "building-small-b", 2.2, 1.55, .5, -Math.PI/2);
+    building(company, "building-small-a", 1.45, -1.55, .55, Math.PI/2);
+    place(company, kit("pavement-fountain", 1.2, true), 0, 0, 1.75, 0);
+    place(company, kit("grass-trees-tall", 1.1, true), 1.7, 0, -1.55, 0);
+    place(company, kit("grass-trees", 1.0, true), -1.7, 0, -1.5, 0);
+    var flag = null;   /* no flag: keeps the model sober */
+    updates.push(function(t){ if (flag) flag.rotation.y = Math.PI/2 + Math.sin(t*1.2)*.15; });
+
+    /* clouds drifting above */
+    [].forEach(function(c, i){   /* clouds removed: they read as floating cubes */
+      var cl = kit("cloud", c[3]); if (!cl) return; cl.position.set(c[0], c[1], c[2]);
+      cl.traverse(function(m){ if (m.isMesh){ m.castShadow = false; m.receiveShadow = false; } }); scene.add(cl);
+      updates.push(function(t){ cl.position.x = c[0] + Math.sin(t*.05 + i)*1.5; });
     });
+
+    /* 0 crowdfunding: a crowd tosses coins into a jar that fills up */
+    (function(){
+      var g = base(0);
+      add(g, cyl(.62, .62, .06, 32), INK, 0, .03, 0);
+      var jar = add(g, new T.CylinderGeometry(.55, .5, 1.0, 36, 1, true), M(0xbfe3f5, {transparent:true, opacity:.35, roughness:.05, clearcoat:1, side:T.DoubleSide}), 0, .56, 0); jar.castShadow = false;
+      var fillM = add(g, cyl(.47, .44, 1, 28), GOLD, 0, .1, 0);
+      var people = [], fly = [];
+      for (var i = 0; i < 7; i++){
+        var a = i/7*Math.PI*2 + .25, x = Math.cos(a)*1.3, z = Math.sin(a)*1.3;
+        people.push(person(g, x, z, Math.atan2(-x, -z), ["wave", "clap", "idle", "wave", "clap", "idle", "wave"][i], .88, ["business-man", "woman-b", "man-in-suit", "woman-c", "woman-dress", "business-man", "woman-c"][i]));
+        fly.push(flyCoin(g));
+      }
+      updates.push(function(t){
+        var lvl = .12 + .68*((t*.07) % 1); fillM.scale.y = lvl; fillM.position.y = .07 + lvl/2;
+        fly.forEach(function(c, i){
+          var u = (t*.42 + i/7) % 1, p = people[i].position, q = arc([p.x*.85, .75, p.z*.85], [0, 1.15, 0], ease(u), .8);
+          c.position.set(q[0], q[1], q[2]); c.rotation.y = u*12; c.scale.setScalar(Math.max(.001, Math.min(1, u*6, (1 - u)*5 + .2)));
+        });
+      });
+    })();
+
+    /* 1 private equity: the investor takes a slice of the company, and its value grows */
+    (function(){
+      var g = base(1), col = COLORS[1], a0 = Math.PI*.15, a1 = Math.PI*.7;
+      var pie = new T.Group(); pie.position.set(-.55, .02, .4); g.add(pie);
+      pie.add(sector(.85, a1, a0 + Math.PI*2, .32, CLAY));
+      var slice = sector(.85, a0, a1, .32, accent(1)); pie.add(slice);
+      var mid = (a0 + a1)/2, dir = [Math.cos(mid), -Math.sin(mid)];
+      /* two investors seated side by side, facing the audience, a small table between them */
+      chair(g, .35, .55, 0).scale.setScalar(1.2); chair(g, 1.15, .55, 0).scale.setScalar(1.2);
+      table(g, .75, .45, .26, .26).scale.setScalar(1.2);
+      person(g, .35, .6, .15, "sit", .9, "man-in-suit");
+      person(g, 1.15, .6, -.15, "sit", .9, "woman-dress");
+      var tower = building(g, "building-small-d", 1, .75, -.85, 0);
+      updates.push(function(t){
+        var d = .1 + .3*(.5 + .5*Math.sin(t*1.1)); slice.position.set(dir[0]*d, 0, dir[1]*d);
+        if (tower){ var k = .55 + .7*ease(((t*.18) % 1)*1.3); tower.scale.set(1, k, 1); }   /* the company grows */
+      });
+    })();
+
+    /* 2 leasing: a truck in use, and the rent that goes to the leasing company */
+    (function(){
+      var g = base(2);
+      var truck = place(g, kit("vehicle-truck-yellow", 1.35, true, accent(2)), 0, 0, .55, Math.PI/2);
+      if (!truck){ truck = new T.Group(); add(truck, box(1.1, .6, .6), M(COLORS[2]), 0, .3, 0); place(g, truck, 0, 0, .55, 0); }
+      building(g, "building-garage", .9, .85, -.75, 0);
+      var office = building(g, "building-small-a", 1.15, -.75, -.8, 0);
+      person(g, -1.05, .95, .5, "interact", .9, "business-man");
+      var rent = [0, 1, 2].map(function(){ return flyCoin(g); });
+      updates.push(function(t){
+        truck.position.x = Math.sin(t*.6)*.45; truck.position.z = .55;
+        rent.forEach(function(c, j){ var u = (t*.3 + j/3) % 1, q = arc([truck.position.x, 1.0, .55], [-.75, 1.4, -.8], u, .6); c.position.set(q[0], q[1], q[2]); c.rotation.y = u*10; c.scale.setScalar(Math.max(.001, Math.min(1, u*6, (1 - u)*6))); });
+      });
+    })();
+
+    /* 3 factoring: the invoice goes to the factor, the cash comes back at once */
+    (function(){
+      var g = base(3), col = COLORS[3], paper = M(0xffffff, {roughness:.9});
+      for (var i = 0; i < 4; i++){ var s = add(g, box(.62, .02, .82), paper, -.85, .02 + i*.028, .4); s.rotation.y = (i - 1.5)*.07; }
+      function sheet(){ var grp = new T.Group(); add(grp, box(.62, .02, .82), paper, 0, 0, 0); for (var k = 0; k < 4; k++){ var l = add(grp, box(k === 0 ? .3 : .44, .006, .05), k === 0 ? M(col) : INK, k === 0 ? -.07 : 0, .014, -.26 + k*.16); l.castShadow = false; } g.add(grp); return grp; }
+      var top = sheet(); top.position.set(-.85, .135, .4);
+      var flying = sheet(), back = flyCoin(g);
+      building(g, "building-small-b", 1.45, .8, -.35, 0, accent(3));
+      person(g, -.2, 1.0, 0, "interact", .9, "woman-c");
+      var cash = stack(g, 9, -.85, -.6);
+      updates.push(function(t){
+        var u = (t*.28) % 1, a = ease(Math.min(1, u*2)), b = ease(Math.max(0, u*2 - 1));
+        var q = arc([-.85, .2, .4], [.8, 1.25, -.35], a, .9); flying.position.set(q[0], q[1], q[2]); flying.rotation.z = -a*.9; flying.scale.setScalar(u < .5 ? Math.max(.001, Math.min(1, (1 - a)*5 + .05)) : .001);
+        var c = arc([.8, 1.25, -.35], [-.85, .75, -.6], b, .8); back.position.set(c[0], c[1], c[2]); back.rotation.y = b*10; back.scale.setScalar(u > .5 ? Math.max(.001, Math.min(1, b*8, (1 - b)*6 + .1)) : .001);
+        var n = 3 + Math.floor(((t*.28) % 6)); cash.forEach(function(m, i){ m.visible = i < n; });
+      });
+    })();
+
+    /* 4 microfinance: a small loan makes a small business grow */
+    (function(){
+      var g = base(4), col = COLORS[4];
+      var tree = place(g, kit("tree", 1.5), -.75, 0, .35, 0);
+      var drop = flyCoin(g);
+      add(g, box(1.0, .42, .45), CREAM, .65, .21, -.35);
+      add(g, cyl(.025, .025, 1.0, 8), INK, .2, .5, -.15); add(g, cyl(.025, .025, 1.0, 8), INK, 1.1, .5, -.15);
+      for (var i = 0; i < 5; i++){ var st = add(g, box(.2, .04, .62), i % 2 ? CLAY : accent(4), .25 + i*.2, 1.02, -.3); st.rotation.x = .28; }
+      [0, 1, 2].forEach(function(i){ add(g, new T.SphereGeometry(.07, 12, 8), CLAY, .4 + i*.25, .47, -.3); });
+      person(g, .65, .3, .2, "idle", .9, "woman-b");
+      updates.push(function(t){
+        var u = (t*.16) % 1, gr = ease((u - .14)/.55);
+        drop.position.set(-.75, 2.0 - ease(u/.14)*1.85, .35); drop.scale.setScalar(u < .14 ? 1 : .001); drop.rotation.y = u*30;
+        if (tree) tree.scale.setScalar(.35 + .65*gr);
+      });
+    })();
+
+    /* 5 islamic finance: every deal is balanced by a real asset */
+    (function(){
+      var g = base(5), mc = M(COLORS[5]);
+      add(g, cyl(.42, .52, .12, 32), INK, 0, .06, 0);
+      add(g, cyl(.05, .06, 1.45, 16), INK, 0, .8, 0);
+      add(g, new T.SphereGeometry(.09, 16, 12), GOLD, 0, 1.56, 0);
+      var beam = new T.Group(); beam.position.set(0, 1.45, 0); g.add(beam);
+      add(beam, box(2.0, .06, .09), mc, 0, 0, 0);
+      var pans = [-1, 1].map(function(sd){
+        var p = new T.Group(); p.position.set(sd*.95, 0, 0); beam.add(p);
+        [-1, 1].forEach(function(k){ var s = add(p, cyl(.008, .008, .72, 6), INK, k*.16, -.33, 0); s.rotation.z = k*-.3; s.castShadow = false; });
+        add(p, cyl(.44, .36, .05, 32), GOLD, 0, -.68, 0);
+        return p;
+      });
+      var house = kit("building-small-d", .5, false, accent(5));
+      if (house){ house.position.set(0, -.655, 0); pans[0].add(house); }
+      for (var i = 0; i < 5; i++) flatCoin(pans[1], (i % 2)*.16 - .08, -.62 + Math.floor(i/2)*.058, i === 4 ? .14 : -.04);
+      person(g, 1.25, .75, -.5, "stand", .9, "man-in-suit");
+      updates.push(function(t){ var a = Math.sin(t*.9)*.055; beam.rotation.z = a; pans.forEach(function(p){ p.rotation.z = -a; }); });
+    })();
+
+    /* 6 digital finance: money moves through the phone */
+    (function(){
+      var g = base(6), col = COLORS[6];
+      var phone = new T.Group(); phone.position.set(-.35, .08, 0); phone.rotation.x = -.28; phone.rotation.y = .25; g.add(phone);
+      add(phone, box(.8, 1.5, .09), INK, 0, .78, 0);
+      var scr = add(phone, box(.7, 1.36, .012), M(0xe9f6fc, {emissive:0x9fd8ee, emissiveIntensity:.25, roughness:.3}), 0, .78, .046); scr.castShadow = false;
+      add(phone, box(.5, .12, .012), M(col), 0, 1.27, .056).castShadow = false;
+      var bars = [.2, .34, .26, .46].map(function(h, i){ var b = add(phone, box(.09, 1, .014), M(col), -.2 + i*.135, .5, .058); b.userData.h = h; b.castShadow = false; return b; });
+      add(phone, cyl(.07, .07, .014, 20), GOLD, 0, .2, .058).rotation.x = Math.PI/2;
+      var waves = [0, 1].map(function(){ var w = add(g, new T.TorusGeometry(.3, .022, 8, 40, Math.PI), M(col, {transparent:true}), -.35, 1.75, -.35); w.castShadow = false; return w; });
+      add(g, box(.85, .05, .34), WHITE, .85, .33, .55); add(g, box(.05, .33, .3), INK, .5, .165, .55); add(g, box(.05, .33, .3), INK, 1.2, .165, .55);
+      person(g, .85, .55, -.35, "sit", .9, "woman-b");
+      var out = [0, 1, 2].map(function(){ return flyCoin(g); });
+      updates.push(function(t){
+        bars.forEach(function(b, i){ var k = .6 + .4*Math.sin(t*1.6 + i); b.scale.y = b.userData.h*k; b.position.y = .42 + b.scale.y/2; });
+        waves.forEach(function(w, i){ var u = (t*.5 + i*.5) % 1; w.scale.setScalar(.6 + u*1.1); w.material.opacity = 1 - u; });
+        out.forEach(function(c, j){ var u = (t*.35 + j/3) % 1, q = arc([-.25, 1.0, .2], [.75, .8, .45], u, .6); c.position.set(q[0], q[1], q[2]); c.rotation.y = u*10; c.scale.setScalar(Math.max(.001, Math.min(1, u*6, (1 - u)*6))); });
+      });
+    })();
+    if (st.mode) set(st.mode, st.focus);
   }
-  gsap.ticker.add(function(time, dt){ if (!reduce) st.rot += st.spin*dt/1000; draw(); });
-  /* auto mode: hold a photo aligned with the card, then turn one step to the next, and repeat */
-  var auto = null;
-  function stopAuto(){ if (auto){ auto.kill(); auto = null; } gsap.killTweensOf(st, "rot"); }
-  function step(){
-    var target = (Math.round(st.rot/A) + 1)*A;
-    gsap.to(st, {rot:target, duration:reduce ? 0 : 1.3, ease:"power3.inOut", onComplete:function(){ auto = gsap.delayedCall(2.5, step); }});
-  }
-  function set(mode, i){
-    place();
+
+  /* ---------- labels (agenda slide) ---------- */
+  var labelBox = document.getElementById("labels");
+  var labels = NAMES.map(function(n, i){
+    var d = document.createElement("div"); d.className = "nl";
+    d.innerHTML = '<i style="background:' + COLORS[i] + '"></i>' + n;
+    labelBox.appendChild(d); return d;
+  });
+
+  /* ---------- camera ---------- */
+  var st = {off:-0.25, focus:-1, mode:""};
+  var camPos = new T.Vector3(0, 8, 25), camTgt = new T.Vector3(0, 1.2, 0), wantPos = new T.Vector3(), wantTgt = new T.Vector3(), tmp = new T.Vector3();
+  var W = 1, H = 1;
+  function resize(){ W = window.innerWidth; H = window.innerHeight; renderer.setSize(W, H, false); camera.aspect = W/H; camera.updateProjectionMatrix(); }
+  window.addEventListener("resize", resize); resize();
+
+  /* slides with a centred card show the scene faintly behind it; the others keep it to the right of the card */
+  function set(mode, focus){
+    st.mode = mode; st.focus = focus;
     var solo = mode === "finder" || mode === "gap";
-    wheel.classList.toggle("off", solo);
-    wheel.classList.toggle("focus", mode === "focus");
-    focus = mode === "focus" ? i : -1;
-    if (mode === "focus"){
-      /* turn the shortest way so that card i faces the audience */
-      var target = i*A, d = ((target - st.rot) % 360 + 540) % 360 - 180;
-      stopAuto(); st.spin = 0;
-      gsap.to(st, {rot:st.rot + d, tilt:0, zoom:1, duration:reduce ? 0 : 1.4, ease:"power3.inOut", overwrite:"auto"});
-      var img = cards[i].querySelector("img");
-      if (!reduce) gsap.fromTo(img, {scale:1.12}, {scale:1, duration:12, ease:"none", overwrite:true});
-    } else {
-      gsap.to(st, {tilt:0, zoom:1, duration:1.2, ease:"power2.inOut"});   /* same size as the card beside it, just turning */
-      stopAuto(); st.spin = 0;
-      if (!solo){ gsap.to(st, {rot:Math.round(st.rot/A)*A, duration:.8, ease:"power2.out", onComplete:function(){ auto = gsap.delayedCall(2.5, step); }}); }
+    gsap.to(st, {off:solo ? 0 : mode === "map" ? -0.3 : -0.27, duration:1.4, ease:"power2.inOut"});
+    gsap.to(canvas, {opacity:solo ? .22 : 1, duration:.9});
+    document.body.classList.toggle("show-labels", mode === "map");
+    dio.forEach(function(d, i){ gsap.to(d.s, {v:mode === "focus" && i === focus ? 1.12 : 1, duration:1.1, ease:"back.out(1.6)"}); });
+  }
+  function highlight(list){
+    dio.forEach(function(d, i){ gsap.to(d.s, {v:list && list.indexOf(i) >= 0 ? 1.35 : list ? .8 : 1, duration:.6, ease:"back.out(1.6)"}); });
+  }
+
+  var clock = new T.Clock(), snap = /[?&]snap/.test(location.search);
+  function frame(){
+    requestAnimationFrame(frame);
+    var dt = Math.min(0.05, clock.getDelta()), t = reduce ? 3 : clock.elapsedTime;
+    updates.forEach(function(f){ f(t); });
+    if (!reduce) mixers.forEach(function(m){ m.update(dt); });
+    dio.forEach(function(d){ d.g.scale.setScalar(d.s.v); });
+    var sway = reduce ? 0 : Math.sin(t*.25);
+    if (st.mode === "focus" && st.focus >= 0 && dio[st.focus]){
+      var d = dio[st.focus], p = d.g.position, side = tmp.set(-d.out.z, 0, d.out.x);
+      wantPos.copy(p).addScaledVector(d.out, 7.6).addScaledVector(side, .9 + sway*.4); wantPos.y = 4.1;
+      wantTgt.copy(p); wantTgt.y = .65;
+    } else if (st.mode === "map"){ wantPos.set(sway*.4, 30, 30); wantTgt.set(0, 0, .5); }
+    else if (st.mode === "finder"){ wantPos.set(0, 24, 12); wantTgt.set(0, 0, 0); }
+    else if (st.mode === "gap"){ wantPos.set(sway*.5, 9, 26); wantTgt.set(0, 1, 0); }
+    else if (st.mode === "final"){ wantPos.set(sway*.8, 10, 27); wantTgt.set(0, 1, 0); }
+    else { wantPos.set(sway*.8, 8, 25); wantTgt.set(0, 1.3, 0); }
+    var k = reduce || snap ? 1 : 1 - Math.pow(0.004, dt);   /* ?snap = no camera travel (for screenshots) */
+    camPos.lerp(wantPos, k); camTgt.lerp(wantTgt, k);
+    camera.position.copy(camPos); camera.lookAt(camTgt);
+    camera.setViewOffset(W, H, st.off*W, 0, W, H);
+    renderer.render(scene, camera);
+    if (st.mode === "map"){
+      dio.forEach(function(d, i){
+        var q = tmp.copy(d.g.position).setY(2.1).project(camera);
+        labels[i].style.transform = "translate(" + ((q.x + 1)/2*W) + "px," + ((1 - q.y)/2*H) + "px) translate(-50%,-100%)";
+      });
     }
   }
-  return {set:set, highlight:function(){}, place:place};
+  /* decode the embedded models, then build the world */
+  (function load(){
+    var data = window.KENNEY_GLB, names = data && data.models && T.GLTFLoader ? Object.keys(data.models) : [], left = names.length;
+    if (!left){ buildWorld(); return; }
+    function done(){ if (--left === 0) buildWorld(); }
+    names.forEach(function(n){
+      var m = data.models[n], texURL = data.textures[m.kit];
+      /* each model asks for "Textures/colormap.png": hand it the embedded texture of its kit */
+      var mgr = new T.LoadingManager();
+      mgr.setURLModifier(function(url){ return /colormap\.png$/.test(url) ? texURL : url; });
+      var bin = atob(m.glb), buf = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      new T.GLTFLoader(mgr).parse(buf.buffer, "", function(g){ KIT[n] = g; done(); }, done);
+    });
+  })();
+
+  frame();
+  return {set:set, highlight:highlight};
 })();
 
 /* ======================= slide animations ======================= */
-function zoomPhoto(slide){
-  var img = slide.querySelector(".photo img"); if (!img) return;
-  if (reduce){ gsap.set(img, {scale:1}); return; }
-  gsap.fromTo(img, {scale:1.12, xPercent:-1.5}, {scale:1.0, xPercent:1.5, duration:14, ease:"none", overwrite:true});
-}
 function animateIn(slide){
   var els = slide.querySelectorAll("[data-a]");
   if (!els.length || reduce) return;
@@ -599,15 +897,13 @@ function enter(slide){
   slide.querySelectorAll("[data-draw]").forEach(function(g){ if (g.classList.contains("visible")) playDraw(g); else prepDraw(g); });
   if (cam !== "finder") resetFinder();
   animateIn(slide);
-  zoomPhoto(slide);
 }
 Reveal.initialize({
   width:1600, height:900, margin:0.03, minScale:0.2, maxScale:2,
   hash:true, center:false, controls:false, progress:true, slideNumber:"c/t",
   transition:"fade", transitionSpeed:"default", backgroundTransition:"none",
   plugins:[RevealNotes]
-}).then(function(){ S.place(); enter(Reveal.getCurrentSlide()); });
-Reveal.on("resize", function(){ S.place(); });
+}).then(function(){ enter(Reveal.getCurrentSlide()); });
 Reveal.on("slidechanged", function(e){ enter(e.currentSlide); });
 Reveal.on("fragmentshown", function(e){
   e.fragments.forEach(function(f){

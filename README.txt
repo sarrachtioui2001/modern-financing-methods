@@ -21,9 +21,12 @@ DESIGN
   Fonts: Fraunces (titles) and Inter (text).
 
 BUILT WITH
-  Reveal.js 5.1 (slides) · GSAP 3.12 (animations)
+  Reveal.js 5.1 (slides) · GSAP 3.12 (animations) · three.js r128 (3D wheel)
   HTML, CSS, JavaScript and SVG, in a single file: index.html
-  Photos: Unsplash (unsplash.com), free under the Unsplash licence.
+  3D models, all CC0 (free, no credit required):
+    buildings, truck, trees: Kenney (kenney.nl)
+    people: Quaternius (quaternius.com), via poly.pizza
+  They are embedded in lib/models.js; the original .glb files are in models/.
 
 BACKUP
   modern_financing.pdf, in the folder above, has the same content as
